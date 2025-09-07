@@ -16,9 +16,16 @@ type Image struct {
 	User_id      int     `json:"user_id"`
 }
 
-func GetImages(conn *pgx.Conn) ([]Image, error) {
+func GetImages(conn *pgx.Conn, id *int) ([]Image, error) {
+	var rows pgx.Rows
+	var err error
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM images")
+	if id != nil {
+		rows, err = conn.Query(context.Background(), "SELECT * FROM images WHERE id = $1", *id)
+	} else {
+		rows, err = conn.Query(context.Background(), "SELECT * FROM images")
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error getting images: %v", err)
 	}

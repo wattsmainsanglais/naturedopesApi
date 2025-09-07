@@ -6,8 +6,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
-	"naturedopesApi/endpoints"
+	"net/http"
 	//"github.com/joho/godotenv"
 )
 
@@ -29,29 +30,9 @@ func connectToDB() (*pgx.Conn, error) {
 }
 
 func main() {
-	log.Println("Environment Variables:")
-	for _, env := range os.Environ() {
-		log.Println(env)
-	}
-	conn, err := connectToDB()
-	if err != nil {
-		fmt.Println("Error connecting to database:", err)
-		return
-	}
-	defer conn.Close(context.Background())
 
-	fmt.Println("Connected to database!")
-
-	images, err := endpoints.GetImages(conn)
-	if err != nil {
-		fmt.Println("Error retrieving images:", err)
-		return
-	}
-
-	fmt.Println("Images:")
-	for _, image := range images {
-		fmt.Printf("ID: %d, SpeciesName: %s, GPSLong: %f, GPSLat: %f, ImagePath: %s, UserID: %d\n",
-			image.Id, image.Species_name, image.Gps_long, image.Gps_lat, image.Image_path, image.User_id)
-	}
-
+	router := mux.NewRouter()
+	SetupRoutes(router)
+	fmt.Println("Server running on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

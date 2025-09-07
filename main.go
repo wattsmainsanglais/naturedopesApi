@@ -3,20 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	//"log"
 	"os"
 
 	"github.com/jackc/pgx/v4"
 	"naturedopesApi/endpoints"
-
-	"github.com/joho/godotenv"
+	//"github.com/joho/godotenv"
 )
 
 func connectToDB() (*pgx.Conn, error) {
-	err := godotenv.Load()
+	/*err := godotenv.Load()   Commenting this line for railway deployment
 	if err != nil {
 		log.Fatal(err)
-	}
+	}*/
 
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {

@@ -29,6 +29,7 @@ func GetImages(conn *pgx.Conn) ([]Image, error) {
 		var image Image
 		err := rows.Scan(&image.Id, &image.Species_name, &image.Gps_long, &image.Gps_lat, &image.Image_path, &image.User_id)
 		if err != nil {
+			fmt.Println("Error scanning row:", err)
 			return nil, err
 		}
 		images = append(images, image)

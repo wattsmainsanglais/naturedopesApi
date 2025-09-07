@@ -11,11 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func SetupRoutes(router *mux.Router) {
-	router.HandleFunc("/images", getImagesHandler).Methods("GET")
-	router.HandleFunc("/images/{id}", getImageHandler).Methods("GET")
-}
-
 func getImageHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]

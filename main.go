@@ -29,6 +29,11 @@ func connectToDB() (*pgx.Conn, error) {
 	return conn, nil
 }
 
+func SetupRoutes(router *mux.Router) {
+	router.HandleFunc("/images", getImagesHandler).Methods("GET")
+	router.HandleFunc("/images/{id}", getImageHandler).Methods("GET")
+}
+
 func main() {
 
 	router := mux.NewRouter()

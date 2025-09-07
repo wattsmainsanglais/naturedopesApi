@@ -16,13 +16,7 @@ func connectToDB() (*pgx.Conn, error) {
 	if err != nil {
 		log.Fatal(err)
 	}*/
-	databaseURL, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		log.Println("DATABASE_URL environment variable is not set")
-	} else {
-		log.Println("DATABASE_URL environment variable is set to:", databaseURL)
-	}
-	log.Println((os.Getenv("DATABASE_URL")))
+
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		return nil, fmt.Errorf("DATABASE_URL environment variable is not set")

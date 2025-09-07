@@ -29,6 +29,10 @@ func connectToDB() (*pgx.Conn, error) {
 }
 
 func main() {
+	log.Println("Environment Variables:")
+	for _, env := range os.Environ() {
+		log.Println(env)
+	}
 	conn, err := connectToDB()
 	if err != nil {
 		fmt.Println("Error connecting to database:", err)

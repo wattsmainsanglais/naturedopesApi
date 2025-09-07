@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	//"log"
+	"log"
 	"os"
 
 	"github.com/jackc/pgx/v4"
@@ -16,7 +16,7 @@ func connectToDB() (*pgx.Conn, error) {
 	if err != nil {
 		log.Fatal(err)
 	}*/
-
+	log.Println((os.Getenv("DATABASE_URL")))
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		return nil, fmt.Errorf("DATABASE_URL environment variable is not set")

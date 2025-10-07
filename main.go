@@ -30,8 +30,18 @@ func connectToDB() (*pgx.Conn, error) {
 }
 
 func SetupRoutes(router *mux.Router) {
-	router.HandleFunc("/images", getImagesHandler).Methods("GET")
-	router.HandleFunc("/images/{id}", getImageHandler).Methods("GET")
+	// Protected image endpoints (require API key)
+	apiKeyAuth := middleware.ApiKeyMiddleware(connectToDB)
+
+	imageRouter := router.PathPrefix("/images").Subrouter()
+	imageRouter.Use(apiKeyAuth)
+	imageRouter.HandleFunc("", getImagesHandler).Methods("GET")
+	imageRouter.HandleFunc("/{id}", getImageHandler).Methods("GET")
+
+	// API key management endpoints (unprotected for now)
+	router.HandleFunc("/api/keys", createApiKeyHandler).Methods("POST")
+	router.HandleFunc("/api/keys", getApiKeysHandler).Methods("GET")
+	router.HandleFunc("/api/keys/{id}", revokeApiKeyHandler).Methods("DELETE")
 }
 
 func main() {

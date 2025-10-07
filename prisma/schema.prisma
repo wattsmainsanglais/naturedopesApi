@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      =  env("DATABASE_URL")
+}
+
+model images {
+  id           Int    @id @default(autoincrement())
+  species_name String @db.VarChar(100)
+  gps_long     Float  @db.Real
+  gps_lat      Float  @db.Real
+  image_path   String @db.VarChar(200)
+  user_id      Int
+
+  @@index([user_id], map: "images_fkey")
+}
+
+model test {
+  id        Int     @id @default(autoincrement())
+  test_text String? @default("test")
+  test2     Int     @default(1)
+}
+
+model users {
+  id       Int     @id @default(autoincrement())
+  username String  @unique(map: "users_username_idx") @db.VarChar(50)
+  password String  @db.VarChar(100)
+  email    String  @unique(map: "users_email_idx") @db.VarChar(100)
+  token    String? @db.VarChar(250)
+  passResetToken passResetToken[]
+}
+
+model passResetToken{
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  CreatedAt DateTime  @default(now())
+  resetAt   DateTime?
+  user  users @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model api_keys {
+  id         Int       @id @default(autoincrement())
+  key        String    @unique @db.VarChar(64)
+  name       String    @db.VarChar(100)
+  created_at DateTime  @default(now())
+  last_used  DateTime?
+  revoked    Boolean   @default(false)
+
+  @@index([key])
+}

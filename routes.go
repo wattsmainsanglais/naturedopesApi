@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"naturedopesApi/endpoints"
-	"naturedopesApi/middleware"
 
 	"github.com/gorilla/mux"
 )

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"naturedopesApi/middleware"
 	"os"
 
 	"github.com/gorilla/mux"

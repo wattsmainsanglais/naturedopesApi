@@ -77,6 +77,15 @@ func createApiKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract IP address (handle proxies)
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
+
 	conn, err := connectToDB()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -84,7 +93,7 @@ func createApiKeyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close(context.Background())
 
-	apiKey, err := endpoints.GenerateApiKey(conn, req.Name)
+	apiKey, err := endpoints.GenerateApiKey(conn, req.Name, ip)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

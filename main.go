@@ -7,6 +7,7 @@ import (
 	"naturedopesApi/middleware"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
 	"net/http"
@@ -46,9 +47,24 @@ func SetupRoutes(router *mux.Router) {
 }
 
 func main() {
+	// Initialize rate limiter
+	rateLimiter := middleware.NewRateLimiter()
+	defer rateLimiter.Stop()
 
 	router := mux.NewRouter()
+
+	// Apply rate limiting to all routes
+	router.Use(rateLimiter.RateLimitMiddleware)
+
 	SetupRoutes(router)
+
+	// Configure CORS for open access
+	corsOptions := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}), // Allow all origins for open access
+		handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "X-API-Key"}), // Headers clients can send
+	)
+
 	fmt.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", corsOptions(router)))
 }

@@ -47,8 +47,10 @@ model api_keys {
   key        String    @unique @db.VarChar(64)
   name       String    @db.VarChar(100)
   created_at DateTime  @default(now())
+  expires_at DateTime
   last_used  DateTime?
   revoked    Boolean   @default(false)
+  created_ip String?   @db.VarChar(50)
 
   @@index([key])
 }

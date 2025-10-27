@@ -31,7 +31,7 @@ naturedopesApi/
 The API uses the following main tables:
 - **images**: Stores flora observations with species name, GPS coordinates (lat/long), image path, and user ID
 - **users**: User accounts with username, email, password, and auth tokens
-- **api_keys**: API key management with key, name, created_at, last_used, and revoked status
+- **api_keys**: API key management with key, name, created_at, expires_at, last_used, revoked status, and created_ip
 - **passResetToken**: Password reset token management
 
 ## Current Features
@@ -58,8 +58,11 @@ Currently unprotected to allow frontend integration. Will be protected once user
 ### Authentication System
 - API key middleware validates the `X-API-Key` header on protected routes
 - Keys are stored as 64-character hex strings (32 random bytes)
+- Keys expire after 90 days from creation
 - Tracks `last_used` timestamp on each valid request
+- Logs IP address on key creation for abuse tracking
 - Supports key revocation without deletion
+- Validation checks: exists, not revoked, not expired
 
 ## API Integration with Frontend
 
@@ -106,18 +109,25 @@ curl -X POST http://localhost:8080/api/keys \
   -H "Content-Type: application/json" \
   -d '{"name": "My Flora Research Key"}'
 ```
+Response includes the key (save it!), expiration date (90 days), and creation timestamp.
 
 ### Retrieve All Flora Observations
 ```bash
 curl http://localhost:8080/images \
   -H "X-API-Key: your-64-character-hex-key"
 ```
+Rate limit: 100 requests/hour per key, 1000 requests/day per IP.
 
 ### Get Specific Observation
 ```bash
 curl http://localhost:8080/images/123 \
   -H "X-API-Key: your-64-character-hex-key"
 ```
+
+### Rate Limit Headers
+When rate limited, you'll receive:
+- HTTP 429 Too Many Requests
+- Error message indicating which limit was exceeded
 
 ## Planned Features
 
@@ -140,22 +150,40 @@ curl http://localhost:8080/images/123 \
 3. Public vs. private observation settings
 4. Export functionality (GeoJSON, CSV)
 
-## Security Considerations
+## Security Measures
 
-### Current State
-- API key management endpoints are unprotected (temporary for development)
-- API keys are stored in plaintext (consider hashing for production)
-- No rate limiting implemented yet
-- CORS not configured
+### Implemented (Production Ready)
+✅ **Rate Limiting**
+  - Per-IP limit: 1000 requests/day
+  - Per-key limit: 100 requests/hour
+  - Automatic cleanup of old rate limit entries
+  - Returns 429 Too Many Requests when exceeded
 
-### Production Recommendations
+✅ **API Key Security**
+  - 64-character cryptographically random hex keys
+  - 90-day automatic expiration
+  - IP address logging on creation
+  - Revocation support
+  - Validation checks: exists, not revoked, not expired
+
+✅ **CORS Configuration**
+  - Configured for open access (all origins)
+  - Allows: GET, POST, DELETE, OPTIONS
+  - Permits Content-Type and X-API-Key headers
+
+✅ **Request Tracking**
+  - Logs IP addresses for abuse investigation
+  - Tracks last_used timestamp per key
+  - Created_at timestamp for all keys
+
+### Future Enhancements
 1. Hash API keys before storage (store hash, return key only on creation)
-2. Implement rate limiting middleware
-3. Add CORS configuration for frontend domain
-4. Protect API key endpoints with user session authentication
-5. Add API key scopes/permissions system
-6. Implement request logging and monitoring
-7. Add input validation and sanitization
+2. Add CAPTCHA to key generation endpoint
+3. Protect API key management endpoints with user authentication
+4. Add API key scopes/permissions system
+5. Implement structured logging and monitoring
+6. Add usage analytics dashboard
+7. Webhook alerts for abuse patterns
 
 ## Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)
@@ -168,11 +196,18 @@ curl http://localhost:8080/images/123 \
 - API provides programmatic data access for external tools and advanced users
 
 ## Recent Changes
-- Migrated database schema to add `api_keys` table
-- Added API key generation and management endpoints
-- Implemented middleware for API key validation
-- Updated route handlers to use API key authentication
-- Set up route organization with `SetupRoutes` function
+- **Security Hardening (2025-10-27)**:
+  - Added rate limiting: 100 req/hour per key, 1000 req/day per IP
+  - Implemented 90-day key expiration
+  - Added IP address logging on key creation
+  - Configured CORS for open access
+  - Updated validation to check key expiration
+- **Initial API Key System**:
+  - Migrated database schema to add `api_keys` table
+  - Added API key generation and management endpoints
+  - Implemented middleware for API key validation
+  - Updated route handlers to use API key authentication
+  - Set up route organization with `SetupRoutes` function
 
 ## Notes
 - The `firstApi` binary in the project root is an older compiled version

@@ -3,6 +3,7 @@ package endpoints
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v4"
 )
@@ -17,13 +18,17 @@ type Image struct {
 }
 
 func GetImages(conn *pgx.Conn, id *int) ([]Image, error) {
+	// Create context with 10 second timeout for image queries (could be large dataset)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var rows pgx.Rows
 	var err error
 
 	if id != nil {
-		rows, err = conn.Query(context.Background(), "SELECT * FROM images WHERE id = $1", *id)
+		rows, err = conn.Query(ctx, "SELECT * FROM images WHERE id = $1", *id)
 	} else {
-		rows, err = conn.Query(context.Background(), "SELECT * FROM images")
+		rows, err = conn.Query(ctx, "SELECT * FROM images")
 	}
 
 	if err != nil {

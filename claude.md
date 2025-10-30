@@ -8,7 +8,7 @@ NatureDopes API is a Go-based REST API backend for cataloging locations of wild 
 - **Web Framework**: Gorilla Mux (routing)
 - **Database**: PostgreSQL with pgx/v4 driver
 - **Image Storage**: Iagon (decentralized storage)
-- **Deployment**: Railway
+- **Deployment**: Railway (https://naturedopesapi-production.up.railway.app/)
 - **Schema Management**: Prisma (schema definition)
 
 ## Architecture
@@ -103,9 +103,11 @@ npx prisma generate
 
 ## API Usage Examples
 
+**Base URL**: `https://naturedopesapi-production.up.railway.app`
+
 ### Generate an API Key
 ```bash
-curl -X POST http://localhost:8080/api/keys \
+curl -X POST https://naturedopesapi-production.up.railway.app/api/keys \
   -H "Content-Type: application/json" \
   -d '{"name": "My Flora Research Key"}'
 ```
@@ -113,14 +115,14 @@ Response includes the key (save it!), expiration date (90 days), and creation ti
 
 ### Retrieve All Flora Observations
 ```bash
-curl http://localhost:8080/images \
+curl https://naturedopesapi-production.up.railway.app/images \
   -H "X-API-Key: your-64-character-hex-key"
 ```
 Rate limit: 100 requests/hour per key, 1000 requests/day per IP.
 
 ### Get Specific Observation
 ```bash
-curl http://localhost:8080/images/123 \
+curl https://naturedopesapi-production.up.railway.app/images/123 \
   -H "X-API-Key: your-64-character-hex-key"
 ```
 

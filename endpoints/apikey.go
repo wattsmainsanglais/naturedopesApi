@@ -34,10 +34,14 @@ func GenerateApiKey(conn *pgx.Conn, name string, ipAddress string) (*ApiKey, err
 	// Set expiration to 90 days from now
 	expiresAt := time.Now().Add(90 * 24 * time.Hour)
 
+	// Create context with 5 second timeout for INSERT operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	var apiKey ApiKey
 	var createdIP *string
 	err := conn.QueryRow(
-		context.Background(),
+		ctx,
 		"INSERT INTO api_keys (key, name, created_at, expires_at, revoked, created_ip) VALUES ($1, $2, NOW(), $3, false, $4) RETURNING id, key, name, created_at, expires_at, revoked, created_ip",
 		key, name, expiresAt, ipAddress,
 	).Scan(&apiKey.Id, &apiKey.Key, &apiKey.Name, &apiKey.Created_at, &apiKey.Expires_at, &apiKey.Revoked, &createdIP)
@@ -52,10 +56,14 @@ func GenerateApiKey(conn *pgx.Conn, name string, ipAddress string) (*ApiKey, err
 
 // ValidateApiKey checks if an API key is valid (exists, not revoked, not expired) and updates last_used
 func ValidateApiKey(conn *pgx.Conn, key string) (bool, error) {
+	// Create context with 3 second timeout for validation queries
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	var revoked bool
 	var expiresAt time.Time
 	err := conn.QueryRow(
-		context.Background(),
+		ctx,
 		"SELECT revoked, expires_at FROM api_keys WHERE key = $1",
 		key,
 	).Scan(&revoked, &expiresAt)
@@ -76,9 +84,12 @@ func ValidateApiKey(conn *pgx.Conn, key string) (bool, error) {
 		return false, nil // Key has expired
 	}
 
-	// Update last_used timestamp
+	// Update last_used timestamp with separate timeout
+	updateCtx, updateCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer updateCancel()
+
 	_, err = conn.Exec(
-		context.Background(),
+		updateCtx,
 		"UPDATE api_keys SET last_used = NOW() WHERE key = $1",
 		key,
 	)
@@ -92,8 +103,12 @@ func ValidateApiKey(conn *pgx.Conn, key string) (bool, error) {
 
 // GetApiKeys retrieves all API keys
 func GetApiKeys(conn *pgx.Conn) ([]ApiKey, error) {
+	// Create context with 5 second timeout for SELECT all operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	rows, err := conn.Query(
-		context.Background(),
+		ctx,
 		"SELECT id, key, name, created_at, expires_at, last_used, revoked, created_ip FROM api_keys ORDER BY created_at DESC",
 	)
 	if err != nil {
@@ -118,8 +133,12 @@ func GetApiKeys(conn *pgx.Conn) ([]ApiKey, error) {
 
 // RevokeApiKey marks an API key as revoked
 func RevokeApiKey(conn *pgx.Conn, id int) error {
+	// Create context with 3 second timeout for UPDATE operation
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	result, err := conn.Exec(
-		context.Background(),
+		ctx,
 		"UPDATE api_keys SET revoked = true WHERE id = $1",
 		id,
 	)
